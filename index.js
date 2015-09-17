@@ -3,6 +3,7 @@ var through = require('through2');
 var gutil = require('gulp-util');
 var PluginError = gutil.PluginError;
 var path = require('path'),
+    extend = require('extend'),
     Soup = require('soup'),
     rewriteCSSURLs = require('css-url-rewriter');
 
@@ -33,30 +34,16 @@ function joinBaseAndPath(base, urlPath) {
 
 // Default options
 var defaults = {
-  html: true,
+  html: {
+    'img[src]': 'src',
+    'link[rel=stylesheet]': 'href',
+    'script[src]': 'src',
+    'video[poster]': 'poster',
+    'source[src]': 'src'
+  },
   css: true
 };
 
-var htmlDefaults = {
-  'img[src]': 'src',
-  'link[rel=stylesheet]': 'href',
-  'script[src]': 'src',
-  'video[poster]': 'poster',
-  'source[src]': 'src'
-};
-
-function extend(target, source) {
-  target = target || {};
-  for (var prop in source) {
-    if (typeof source[prop] === 'object') {
-      target[prop] = extend(target[prop], source[prop]);
-    } else {
-      // overwrite only if undefined
-      if (typeof target[prop] === 'undefine') target[prop] = source[prop];
-    }
-  }
-  return target;
-}
 
 // Plugin level function(dealing with files)
 function gulpCdnify(options) {
@@ -65,18 +52,7 @@ function gulpCdnify(options) {
     throw new PluginError(PLUGIN_NAME, 'Missing options');
   }
 
-  options = extend(options, defaults);
-
-  // Handle HTML selector:attribute settings
-  if (options.html === false) options.html = {};
-  else if (options.html === true) options.html = htmlDefaults;
-  else if (typeof options.html === 'object') {
-    for (var key in htmlDefaults) {
-      if (htmlDefaults.hasOwnProperty(key) && options.html[key] == null) {
-        options.html[key] = htmlDefaults[key];
-      }
-    }
-  }
+  options = extend(true, {}, defaults, options);
 
   // Establish the rewriteURL function for this task
   var rewriteURL;
