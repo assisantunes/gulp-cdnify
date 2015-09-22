@@ -41,7 +41,8 @@ var defaults = {
     'video[poster]': 'poster',
     'source[src]': 'src'
   },
-  css: true
+  css: true,
+  custom: false
 };
 
 
@@ -79,14 +80,15 @@ function gulpCdnify(options) {
       cb(null, file);
     }
     if (file.isBuffer()) {
-      if (/\.css$/.test(srcFile)) {
+      if (options.css && /\.css$/.test(srcFile)) {
         // It's a CSS file.
         var oldCSS = String(file.contents),
             newCSS = rewriteCSSURLs(oldCSS, rewriteURL)
+
         file.contents = new Buffer(newCSS);
         gutil.log("Changed CSS file: \"" + srcFile + "\"");
       }
-      else {
+      else if(options.html && /\.html$/.test(srcFile)) {
         // It's an HTML file.
         var oldHTML = String(file.contents),
             soup = new Soup(oldHTML);
@@ -104,6 +106,29 @@ function gulpCdnify(options) {
         // Write it to disk
         file.contents = new Buffer(soup.toString())
         gutil.log("Changed HTML file: \"" + srcFile + "\"");
+      }
+      else if(options.custom){
+        for(var ipath in options.custom){
+          // Custom based on regex
+          if((new RegExp(ipath)).test(srcFile)){
+            var oldContent = String(file.contents);
+            var parts = [];
+            for(var i in options.custom[ipath]){
+              var ref = options.custom[ipath][i];
+              var matches;
+              var index = 0;
+              while((matches = ref.pattern.exec(oldContent)) !== null){
+                parts.push(Buffer(oldContent.substring(index, matches['index'])));
+                parts.push(Buffer(ref.rewrite(matches, rewriteURL)));
+                index = matches['index']+matches[0].length;
+              }
+            }
+
+            parts.push(Buffer(oldContent.substr(index)));
+            file.contents = Buffer.concat(parts);
+            gutil.log("Changed file: \"" + srcFile + "\"");
+          }
+        }
       }
     }
     if (file.isStream()) {

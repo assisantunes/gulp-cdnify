@@ -56,3 +56,18 @@ sources = {
   'source[src]': 'src'
 }
 ```
+
+
+### For those who need replace url on other files (non css or html), with a generic setup for any files;
+```javascript
+pipe($.cdnify({
+  custom: {
+    '\\.js$': [{
+      pattern: /\btemplateUrl\b\s*\:\s*\"([^\'|\"]+)\"/g,
+      rewrite: function(matches, cdnify){
+        return 'templateUrl:"'+cdnify(matches[1])+'"';
+      }
+    }]
+  }
+}));
+```
