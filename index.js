@@ -39,12 +39,12 @@ var defaults = {
     'link[rel=stylesheet]': 'href',
     'script[src]': 'src',
     'video[poster]': 'poster',
-    'source[src]': 'src'
+    'source[src]': 'src',
+    'img[srcset]': 'srcset'
   },
   css: true,
   custom: false
 };
-
 
 // Plugin level function(dealing with files)
 function gulpCdnify(options) {
